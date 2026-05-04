@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel • God Mode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+  <!-- NavBar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="logo">⚙️</span>
+      <div>
+        <h1>Admin Panel</h1>
+        <p>God Mode — จัดการผู้ใช้ทั้งหมด</p>
+      </div>
+    </div>
+    <div class="navbar-user">
+      <span class="role-badge dev">DEV</span>
+      <span class="user-name" id="userDisplay">—</span>
+      <button class="btn-secondary" onclick="signOut()">
+        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-content">
+
+    <!-- Stats Row -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">—</div>
+        <div class="stat-label">ผู้ใช้ทั้งหมด</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statOnline" style="color:var(--green-soft)">—</div>
+        <div class="stat-label">Online ตอนนี้</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statTeachers">—</div>
+        <div class="stat-label">ครู</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statStudents">—</div>
+        <div class="stat-label">นักเรียน</div>
+      </div>
+    </div>
+
+    <!-- Assign / Change Role -->
+    <div class="card">
+      <div class="card-title"><span class="icon">🔑</span> เพิ่ม / เปลี่ยน Role ผู้ใช้</div>
+
+      <div id="createFeedback" class="success-banner hidden">
+        <i class="fas fa-check-circle"></i>
+        <span id="createFeedbackText">ดำเนินการสำเร็จ</span>
+      </div>
+      <div id="createError" class="error-banner hidden">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="createErrorText">เกิดข้อผิดพลาด</span>
+      </div>
+
+      <div class="quiz-form">
+        <div class="form-row">
+          <div>
+            <label>อีเมลผู้ใช้ที่ต้องการเปลี่ยน Role</label>
+            <input type="email" id="targetEmail" placeholder="example@school.ac.th">
+          </div>
+          <div>
+            <label>Role ใหม่</label>
+            <select id="targetRole">
+              <option value="student">student — นักเรียน</option>
+              <option value="teacher">teacher — ครู</option>
+              <option value="dev">dev — ผู้ดูแลระบบ</option>
+            </select>
+          </div>
+        </div>
+        <p style="font-size:13px; color:var(--brown-light); margin-bottom:14px;">
+          <i class="fas fa-info-circle"></i> ค้นหาผู้ใช้จากอีเมลแล้วอัปเดต Role ใน Database ได้ทันที หรือเปลี่ยน Role จากตารางด้านล่างโดยตรง
+        </p>
+        <button class="btn-primary" onclick="changeRoleByEmail()" style="width:auto; padding:13px 32px;">
+          <i class="fas fa-user-edit"></i> เปลี่ยน Role
+        </button>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="card">
+      <div class="card-title"><span class="icon">👥</span> ผู้ใช้ทั้งหมดในระบบ</div>
+
+      <div id="loadingMsg" style="text-align:center; padding:30px; color:var(--brown-light);">
+        <i class="fas fa-spinner fa-spin"></i> กำลังโหลด…
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="users-table" id="usersTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>สถานะ</th>
+              <th>ชื่อ</th>
+              <th>อีเมล</th>
+              <th>บทบาท</th>
+              <th>ห้อง</th>
+              <th>เลขที่</th>
+              <th>เปลี่ยน Role</th>
+              <th>จัดการ</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    let currentAdminUid = null;
+
+    // ── Route Guard ──
+    routeGuard('dev', (user, userData) => {
+      currentAdminUid = user.uid;
+      document.getElementById('userDisplay').textContent = userData.displayName || user.email;
+      loadUsers();
+    });
+
+    // ── Load all users with real-time listener ──
+    function loadUsers() {
+      const usersRef = firebase.database().ref('/users');
+
+      usersRef.on('value', snap => {
+        document.getElementById('loadingMsg').style.display  = 'none';
+        document.getElementById('usersTable').style.display  = '';
+
+        const body = document.getElementById('usersBody');
+        body.innerHTML = '';
+
+        if (!snap.exists()) {
+          body.innerHTML = '<tr><td colspan="8" style="text-align:center; color:var(--brown-light); padding:20px;">ยังไม่มีผู้ใช้</td></tr>';
+          return;
+        }
+
+        const usersObj = snap.val();
+        const users    = Object.entries(usersObj).map(([uid, data]) => ({ uid, ...data }));
+
+        // Stats
+        document.getElementById('statTotal').textContent    = users.length;
+        document.getElementById('statOnline').textContent   = users.filter(u => u.online).length;
+        document.getElementById('statTeachers').textContent = users.filter(u => u.role === 'teacher').length;
+        document.getElementById('statStudents').textContent = users.filter(u => u.role === 'student').length;
+
+        users.forEach(u => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>
+              <span class="online-dot ${u.online ? 'online' : 'offline'}"></span>
+              ${u.online ? 'Online' : 'Offline'}
+            </td>
+            <td>${u.displayName || '—'}</td>
+            <td style="font-size:13px; color:var(--brown-light);">${u.email || '—'}</td>
+            <td><span class="role-badge ${u.role}">${u.role}</span></td>
+            <td style="font-size:13px;">${u.classroom || '—'}</td>
+            <td style="font-size:13px; text-align:center;">${u.studentNum || '—'}</td>
+            <td>
+              <select class="role-select" id="roleSelect_${u.uid}" onchange="updateRole('${u.uid}', this.value)">
+                <option value="student"  ${u.role === 'student'  ? 'selected' : ''}>student</option>
+                <option value="teacher"  ${u.role === 'teacher'  ? 'selected' : ''}>teacher</option>
+                <option value="dev"      ${u.role === 'dev'      ? 'selected' : ''}>dev</option>
+              </select>
+            </td>
+            <td>
+              ${u.uid !== currentAdminUid
+                ? `<button class="btn-danger btn-sm" onclick="deleteUser('${u.uid}', '${u.displayName || u.email}')">ลบ</button>`
+                : '<span style="font-size:12px; color:var(--brown-light);">ตัวคุณ</span>'
+              }
+            </td>
+          `;
+          body.appendChild(tr);
+        });
+      }, err => {
+        // ★ Error callback — แสดงข้อผิดพลาดแทน spinner ค้าง
+        console.error('loadUsers error:', err);
+        document.getElementById('loadingMsg').innerHTML =
+          `<i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i> โหลดข้อมูลไม่สำเร็จ: ${err.message}<br><small style="color:var(--brown-light);">กรุณาตรวจสอบ Firebase Database Rules ว่า dev สามารถอ่าน /users ได้</small>`;
+      });
+    }
+
+    // ── Update role ──
+    async function updateRole(uid, newRole) {
+      try {
+        await firebase.database().ref(`/users/${uid}/role`).set(newRole);
+      } catch (err) {
+        alert('อัปเดต Role ไม่สำเร็จ: ' + err.message);
+      }
+    }
+
+    // ── Delete user from DB (not Auth — needs Admin SDK for full delete) ──
+    async function deleteUser(uid, name) {
+      if (!confirm(`ต้องการลบผู้ใช้ "${name}" ออกจากระบบ?`)) return;
+      try {
+        await firebase.database().ref(`/users/${uid}`).remove();
+      } catch (err) {
+        alert('ลบผู้ใช้ไม่สำเร็จ: ' + err.message);
+      }
+    }
+
+    // ── Change role by email lookup ──
+    async function changeRoleByEmail() {
+      const email   = document.getElementById('targetEmail').value.trim();
+      const newRole = document.getElementById('targetRole').value;
+      hideFeedback();
+
+      if (!email) { showCreateError('กรุณากรอกอีเมลผู้ใช้'); return; }
+
+      try {
+        const snap = await firebase.database().ref('/users').orderByChild('email').equalTo(email).get();
+        if (!snap.exists()) { showCreateError('ไม่พบผู้ใช้ที่มีอีเมลนี้ในระบบ'); return; }
+
+        const entries = Object.entries(snap.val());
+        const [uid]   = entries[0];
+        await firebase.database().ref(`/users/${uid}/role`).set(newRole);
+
+        document.getElementById('targetEmail').value = '';
+        document.getElementById('createFeedbackText').textContent = `เปลี่ยน Role ของ "${email}" เป็น "${newRole}" สำเร็จ!`;
+        document.getElementById('createFeedback').classList.remove('hidden');
+        setTimeout(hideFeedback, 4000);
+      } catch (err) {
+        showCreateError('เกิดข้อผิดพลาด: ' + err.message);
+      }
+    }
+
+    function showCreateError(msg) {
+      document.getElementById('createErrorText').textContent = msg;
+      document.getElementById('createError').classList.remove('hidden');
+    }
+    function hideFeedback() {
+      document.getElementById('createFeedback').classList.add('hidden');
+      document.getElementById('createError').classList.add('hidden');
+    }
+  </script>
+</body>
+</html>

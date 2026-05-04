@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teacher Dashboard • ภาษาจีน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+  <!-- NavBar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="logo">📚</span>
+      <div>
+        <h1>Teacher Dashboard</h1>
+        <p>ระบบจัดการสื่อการสอน</p>
+      </div>
+    </div>
+    <div class="navbar-user">
+      <span class="role-badge teacher">ครู</span>
+      <span class="user-name" id="userDisplay">—</span>
+      <button class="btn-secondary" onclick="signOut()">
+        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+      </button>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="page-content">
+
+    <!-- ── Section 1: File Management ── -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">📁</span> จัดการไฟล์สื่อการสอน
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p>คลิกหรือลากไฟล์มาที่นี่</p>
+        <small>รองรับ PDF, PNG, JPG, MP4 (สูงสุด 50 MB)</small>
+      </div>
+      <input type="file" id="fileInput" multiple style="display:none" accept=".pdf,.png,.jpg,.jpeg,.mp4">
+
+      <!-- File List -->
+      <ul class="file-list" id="fileList" style="margin-top:18px;">
+        <li class="file-item">
+          <div class="file-meta">
+            <i class="fas fa-file-pdf" style="color:#e74c3c;"></i>
+            <div>
+              <div class="file-name">บทที่ 1 - พินอิน.pdf</div>
+              <div class="file-size">2.4 MB</div>
+            </div>
+          </div>
+          <button class="btn-danger btn-sm">ลบ</button>
+        </li>
+        <li class="file-item">
+          <div class="file-meta">
+            <i class="fas fa-image" style="color:#3498db;"></i>
+            <div>
+              <div class="file-name">แผนที่จีน.png</div>
+              <div class="file-size">1.1 MB</div>
+            </div>
+          </div>
+          <button class="btn-danger btn-sm">ลบ</button>
+        </li>
+      </ul>
+    </div>
+
+    <!-- ── Section 2: Quiz Builder ── -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">✏️</span> สร้างคำถามแบบทดสอบ
+      </div>
+
+      <div id="quizFeedback" class="success-banner hidden">
+        <i class="fas fa-check-circle"></i>
+        <span id="quizFeedbackText">บันทึกสำเร็จ</span>
+      </div>
+
+      <div class="quiz-form">
+        <div class="form-row">
+          <div>
+            <label>บทที่</label>
+            <select id="chapterSel">
+              <option value="1">บทที่ 1 — การทักทาย</option>
+              <option value="2">บทที่ 2 — ตัวเลข</option>
+              <option value="3">บทที่ 3 — สี</option>
+              <option value="4">บทที่ 4 — ครอบครัว</option>
+            </select>
+          </div>
+          <div>
+            <label>ประเภทคำถาม</label>
+            <select id="qTypeSel">
+              <option value="choice">ปรนัย (4 ตัวเลือก)</option>
+              <option value="translate">แปลความหมาย</option>
+            </select>
+          </div>
+        </div>
+
+        <label>คำถาม (ภาษาไทยหรือจีน)</label>
+        <input type="text" id="qText" placeholder="เช่น: 你好 แปลว่าอะไร?">
+
+        <label>ตัวเลือก</label>
+        <div id="optionsWrap">
+          <div class="option-row"><span>A.</span><input type="text" id="opt0" placeholder="ตัวเลือก A (ถูกต้อง)"></div>
+          <div class="option-row"><span>B.</span><input type="text" id="opt1" placeholder="ตัวเลือก B"></div>
+          <div class="option-row"><span>C.</span><input type="text" id="opt2" placeholder="ตัวเลือก C"></div>
+          <div class="option-row"><span>D.</span><input type="text" id="opt3" placeholder="ตัวเลือก D"></div>
+        </div>
+        <small style="color:var(--brown-light); display:block; margin-bottom:14px;">* ตัวเลือก A คือคำตอบที่ถูกต้อง</small>
+
+        <button class="btn-primary" onclick="saveQuestion()" style="width:auto; padding:13px 36px;">
+          <i class="fas fa-save"></i> บันทึกคำถาม
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Section 3: Students List ── -->
+    <div class="card">
+      <div class="card-title">
+        <span class="icon">🎓</span> รายชื่อนักเรียนทั้งหมด
+      </div>
+
+      <div id="teacherLoadingMsg" style="text-align:center; padding:30px; color:var(--brown-light);">
+        <i class="fas fa-spinner fa-spin"></i> กำลังโหลด…
+      </div>
+
+      <!-- Filter -->
+      <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; display:none;" id="studentFilterWrap">
+        <label style="font-weight:600; color:var(--brown-mid);">กรองห้อง:</label>
+        <select id="classroomFilter" style="padding:8px 14px; border-radius:10px; border:1.5px solid var(--border); font-family:var(--font); font-size:14px; background:var(--cream-card);" onchange="filterStudents()">
+          <option value="">ทุกห้อง</option>
+        </select>
+        <span id="studentCount" style="font-size:13px; color:var(--brown-light); margin-left:auto;"></span>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table class="users-table" id="studentsTable" style="display:none;">
+          <thead>
+            <tr>
+              <th>สถานะ</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th>ห้อง</th>
+              <th>เลขที่</th>
+              <th>อีเมล</th>
+            </tr>
+          </thead>
+          <tbody id="studentsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    // ─── Route Guard: only 'teacher' role ───
+    routeGuard('teacher', (user, userData) => {
+      document.getElementById('userDisplay').textContent = userData.displayName || user.email;
+      loadStudents();
+    });
+
+    // ─── File input handler ───
+    document.getElementById('fileInput').addEventListener('change', function () {
+      const list = document.getElementById('fileList');
+      Array.from(this.files).forEach(file => {
+        const li = document.createElement('li');
+        li.className = 'file-item';
+        const icon = file.type.includes('pdf') ? 'fa-file-pdf' : file.type.includes('image') ? 'fa-image' : 'fa-file';
+        const color = file.type.includes('pdf') ? '#e74c3c' : file.type.includes('image') ? '#3498db' : '#8b7352';
+        const sizeMB = (file.size / 1048576).toFixed(1);
+        li.innerHTML = `
+          <div class="file-meta">
+            <i class="fas ${icon}" style="color:${color};"></i>
+            <div>
+              <div class="file-name">${file.name}</div>
+              <div class="file-size">${sizeMB} MB</div>
+            </div>
+          </div>
+          <button class="btn-danger btn-sm" onclick="this.closest('li').remove()">ลบ</button>
+        `;
+        list.prepend(li);
+      });
+    });
+
+    // ─── Save quiz question to Firebase DB ───
+    async function saveQuestion() {
+      const question = document.getElementById('qText').value.trim();
+      if (!question) { alert('กรุณากรอกคำถาม'); return; }
+
+      const opts = ['opt0','opt1','opt2','opt3'].map(id => document.getElementById(id).value.trim());
+      if (opts.some(o => !o)) { alert('กรุณากรอกตัวเลือกให้ครบ 4 ข้อ'); return; }
+
+      const chapter = document.getElementById('chapterSel').value;
+      const type    = document.getElementById('qTypeSel').value;
+
+      const quizData = {
+        question,
+        options: opts,
+        answer: opts[0],
+        type,
+        chapter: parseInt(chapter),
+        createdAt: Date.now(),
+        createdBy: firebase.auth().currentUser.uid
+      };
+
+      try {
+        await firebase.database().ref('/quizzes').push(quizData);
+        // Clear form
+        ['qText','opt0','opt1','opt2','opt3'].forEach(id => document.getElementById(id).value = '');
+        const fb = document.getElementById('quizFeedback');
+        document.getElementById('quizFeedbackText').textContent = `บันทึกคำถามบทที่ ${chapter} สำเร็จ!`;
+        fb.classList.remove('hidden');
+        setTimeout(() => fb.classList.add('hidden'), 3000);
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+      }
+    }
+    // ─── Load students list ───
+    let allStudents = [];
+
+    function loadStudents() {
+      firebase.database().ref('/users').orderByChild('role').equalTo('student').on('value', snap => {
+        document.getElementById('teacherLoadingMsg').style.display = 'none';
+        document.getElementById('studentsTable').style.display = '';
+        document.getElementById('studentFilterWrap').style.display = 'flex';
+
+        if (!snap.exists()) {
+          document.getElementById('studentsBody').innerHTML =
+            '<tr><td colspan="5" style="text-align:center; color:var(--brown-light); padding:20px;">ยังไม่มีนักเรียน</td></tr>';
+          return;
+        }
+
+        allStudents = Object.entries(snap.val()).map(([uid, d]) => ({ uid, ...d }));
+        allStudents.sort((a, b) => {
+          const cr = (a.classroom || '').localeCompare(b.classroom || '');
+          return cr !== 0 ? cr : (a.studentNum || 0) - (b.studentNum || 0);
+        });
+
+        // Populate classroom filter
+        const classrooms = [...new Set(allStudents.map(s => s.classroom).filter(Boolean))].sort();
+        const sel = document.getElementById('classroomFilter');
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">ทุกห้อง</option>';
+        classrooms.forEach(c => {
+          const o = document.createElement('option');
+          o.value = c; o.textContent = c;
+          if (c === cur) o.selected = true;
+          sel.appendChild(o);
+        });
+
+        renderStudents(allStudents);
+      }, err => {
+        // ★ Error callback — แสดงข้อผิดพลาดแทน spinner ค้าง
+        console.error('loadStudents error:', err);
+        document.getElementById('teacherLoadingMsg').innerHTML =
+          `<i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i> โหลดข้อมูลนักเรียนไม่สำเร็จ: ${err.message}<br><small style="color:var(--brown-light);">กรุณาตรวจสอบ Firebase Database Rules ว่า teacher สามารถอ่าน /users ได้</small>`;
+      });
+    }
+
+    function filterStudents() {
+      const room = document.getElementById('classroomFilter').value;
+      const filtered = room ? allStudents.filter(s => s.classroom === room) : allStudents;
+      renderStudents(filtered);
+    }
+
+    function renderStudents(list) {
+      const body = document.getElementById('studentsBody');
+      body.innerHTML = '';
+      document.getElementById('studentCount').textContent = `แสดง ${list.length} คน`;
+
+      if (!list.length) {
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--brown-light); padding:20px;">ไม่มีนักเรียนในห้องนี้</td></tr>';
+        return;
+      }
+      list.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>
+            <span class="online-dot ${s.online ? 'online' : 'offline'}"></span>
+            ${s.online ? 'Online' : 'Offline'}
+          </td>
+          <td>${s.displayName || '—'}</td>
+          <td><span style="background:rgba(122,94,70,0.1); padding:3px 10px; border-radius:20px; font-size:13px; font-weight:600;">${s.classroom || '—'}</span></td>
+          <td style="text-align:center; font-weight:600;">${s.studentNum || '—'}</td>
+          <td style="font-size:13px; color:var(--brown-light);">${s.email || '—'}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Portal • ภาษาจีน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-body">
+
+  <!-- NavBar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <span class="logo">🎓</span>
+      <div>
+        <h1>Student Portal</h1>
+        <p>เรียนรู้ภาษาจีน ม.1</p>
+      </div>
+    </div>
+    <div class="navbar-user">
+      <span class="role-badge student">นักเรียน</span>
+      <span class="user-name" id="userDisplay">—</span>
+      <button class="btn-secondary" onclick="signOut()">
+        <i class="fas fa-sign-out-alt"></i> ออกจากระบบ
+      </button>
+    </div>
+  </nav>
+
+  <div class="page-content">
+
+    <!-- TAB MENU -->
+    <div style="display:flex; gap:12px; margin-bottom:24px;">
+      <button class="btn-primary" id="tabSlides" onclick="switchTab('slides')" style="width:auto; padding:11px 28px; box-shadow:0 6px 0 #5e4630;">
+        <i class="fas fa-photo-video"></i> สไลด์เรียน
+      </button>
+      <button class="btn-secondary" id="tabGame" onclick="switchTab('game')">
+        <i class="fas fa-gamepad"></i> Game Mode
+      </button>
+    </div>
+
+    <!-- ── SLIDES TAB ── -->
+    <div id="slidesTab">
+      <div class="card">
+        <div class="card-title"><span class="icon">📖</span> สื่อการสอน</div>
+        <div class="slides-grid">
+          <div class="slide-card" onclick="openSlide('https://www.canva.com/design/example1/view?embed')">
+            <div class="thumb">🇨🇳</div>
+            <div class="slide-title">บทที่ 1 — การทักทาย</div>
+            <div class="slide-sub">8 สไลด์ • PDF</div>
+          </div>
+          <div class="slide-card" onclick="openSlide('#')">
+            <div class="thumb">🔢</div>
+            <div class="slide-title">บทที่ 2 — ตัวเลข</div>
+            <div class="slide-sub">12 สไลด์ • Canva</div>
+          </div>
+          <div class="slide-card" onclick="openSlide('#')">
+            <div class="thumb">🎨</div>
+            <div class="slide-title">บทที่ 3 — สี</div>
+            <div class="slide-sub">10 สไลด์ • PDF</div>
+          </div>
+          <div class="slide-card" onclick="openSlide('#')">
+            <div class="thumb">👨‍👩‍👧</div>
+            <div class="slide-title">บทที่ 4 — ครอบครัว</div>
+            <div class="slide-sub">14 สไลด์ • Canva</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Iframe viewer -->
+      <div class="card" id="iframeCard" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <span class="card-title" style="margin:0;"><span class="icon">▶️</span> กำลังเปิดสไลด์</span>
+          <button class="btn-secondary" onclick="closeSlide()"><i class="fas fa-times"></i> ปิด</button>
+        </div>
+        <iframe id="slideFrame" src="" style="width:100%; height:70vh; border:none; border-radius:12px;"></iframe>
+      </div>
+    </div>
+
+    <!-- ── GAME TAB ── -->
+    <div id="gameTab" style="display:none;">
+      <div class="card game-container">
+        <div class="card-title"><span class="icon">🎮</span> Game Mode — แบบทดสอบ</div>
+
+        <!-- Chapter picker -->
+        <div id="chapterPicker">
+          <p style="color:var(--brown-light); margin-bottom:16px;">เลือกบทที่ต้องการทำแบบทดสอบ:</p>
+          <div class="slides-grid" style="grid-template-columns: repeat(auto-fill, minmax(140px,1fr));">
+            <div class="slide-card" onclick="startGame(1)"><div class="thumb">1️⃣</div><div class="slide-title">บทที่ 1</div></div>
+            <div class="slide-card" onclick="startGame(2)"><div class="thumb">2️⃣</div><div class="slide-title">บทที่ 2</div></div>
+            <div class="slide-card" onclick="startGame(3)"><div class="thumb">3️⃣</div><div class="slide-title">บทที่ 3</div></div>
+            <div class="slide-card" onclick="startGame(4)"><div class="thumb">4️⃣</div><div class="slide-title">บทที่ 4</div></div>
+          </div>
+        </div>
+
+        <!-- Quiz UI (hidden until game starts) -->
+        <div id="quizUI" style="display:none;">
+          <div class="quiz-progress">
+            <span class="quiz-score" id="qNum">1 / 5</span>
+            <div class="progress-bar-wrap">
+              <div class="progress-bar-fill" id="progressFill" style="width:0%"></div>
+            </div>
+            <span class="quiz-score">คะแนน: <span id="scoreDisp">0</span></span>
+          </div>
+
+          <div class="quiz-question-card">
+            <div class="quiz-q-num" id="qLabel">คำถามที่ 1</div>
+            <div class="quiz-q-text" id="qText">กำลังโหลด…</div>
+            <div class="choices-grid" id="choicesGrid"></div>
+            <div id="nextWrap" style="display:none; margin-top:20px;">
+              <button class="btn-primary" id="nextBtn" onclick="nextQuestion()" style="width:auto; padding:12px 36px;">
+                ถัดไป <i class="fas fa-arrow-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Result screen (hidden until end) -->
+        <div id="resultUI" style="display:none; text-align:center; padding:20px 0;">
+          <div style="font-size:64px; margin-bottom:16px;" id="resultEmoji">🎉</div>
+          <h2 style="font-size:26px; color:var(--brown-dark); margin-bottom:8px;">ทำแบบทดสอบเสร็จแล้ว!</h2>
+          <p style="color:var(--brown-light); margin-bottom:20px;">คะแนนของคุณ</p>
+          <div style="font-size:52px; font-weight:700; color:var(--brown-mid);" id="finalScore">0/0</div>
+          <div style="margin-top:24px; display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn-primary" onclick="restartGame()" style="width:auto; padding:12px 30px;">เล่นใหม่</button>
+            <button class="btn-secondary" onclick="backToPicker()">เลือกบทอื่น</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /page-content -->
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    // Route Guard
+    routeGuard('student', (user, userData) => {
+      document.getElementById('userDisplay').textContent = userData.displayName || user.email;
+    });
+
+    // ── Tab switch ──
+    function switchTab(tab) {
+      document.getElementById('slidesTab').style.display = tab === 'slides' ? '' : 'none';
+      document.getElementById('gameTab').style.display   = tab === 'game'   ? '' : 'none';
+      document.getElementById('tabSlides').className = tab === 'slides' ? 'btn-primary' : 'btn-secondary';
+      document.getElementById('tabGame').className   = tab === 'game'   ? 'btn-primary' : 'btn-secondary';
+      if (tab === 'slides') {
+        document.getElementById('tabSlides').style.cssText = 'width:auto;padding:11px 28px;box-shadow:0 6px 0 #5e4630;';
+        document.getElementById('tabGame').style.cssText = '';
+      } else {
+        document.getElementById('tabGame').style.cssText = 'width:auto;padding:11px 28px;box-shadow:0 6px 0 #5e4630;';
+        document.getElementById('tabSlides').style.cssText = '';
+      }
+    }
+
+    // ── Slides ──
+    function openSlide(url) {
+      if (url === '#') { alert('สไลด์นี้ยังไม่พร้อม'); return; }
+      document.getElementById('slideFrame').src = url;
+      document.getElementById('iframeCard').style.display = '';
+      document.getElementById('iframeCard').scrollIntoView({ behavior: 'smooth' });
+    }
+    function closeSlide() {
+      document.getElementById('slideFrame').src = '';
+      document.getElementById('iframeCard').style.display = 'none';
+    }
+
+    // ── Game Mode ──
+    let questions = [], currentQ = 0, score = 0, currentChapter = 1;
+
+    // Demo questions — in production these load from Firebase /quizzes
+    const demoQuestions = {
+      1: [
+        { question: '你好 แปลว่าอะไร?', options: ['สวัสดี', 'ขอบคุณ', 'ลาก่อน', 'ขอโทษ'], answer: 'สวัสดี' },
+        { question: '谢谢 แปลว่าอะไร?', options: ['ขอบคุณ', 'สวัสดี', 'ยินดีต้อนรับ', 'ไม่เป็นไร'], answer: 'ขอบคุณ' },
+        { question: 'การทักทายในภาษาจีนกลางคือ?', options: ['你好', '再见', '谢谢', '对不起'], answer: '你好' },
+        { question: '再见 แปลว่าอะไร?', options: ['ลาก่อน', 'สวัสดี', 'ขอบคุณ', 'ยินดีต้อนรับ'], answer: 'ลาก่อน' },
+        { question: '对不起 แปลว่าอะไร?', options: ['ขอโทษ', 'ไม่เป็นไร', 'สวัสดี', 'ขอบคุณ'], answer: 'ขอโทษ' },
+      ]
+    };
+
+    async function startGame(chapter) {
+      currentChapter = chapter;
+      score = 0; currentQ = 0;
+
+      // Try Firebase first, fall back to demo
+      try {
+        const snap = await firebase.database()
+          .ref('/quizzes')
+          .orderByChild('chapter')
+          .equalTo(chapter)
+          .limitToFirst(10)
+          .get();
+
+        if (snap.exists()) {
+          questions = Object.values(snap.val());
+          // Shuffle options
+          questions = questions.map(q => ({ ...q, options: shuffleArr([...q.options]) }));
+        } else {
+          questions = demoQuestions[chapter] || demoQuestions[1];
+        }
+      } catch {
+        questions = demoQuestions[chapter] || demoQuestions[1];
+      }
+
+      document.getElementById('chapterPicker').style.display = 'none';
+      document.getElementById('resultUI').style.display      = 'none';
+      document.getElementById('quizUI').style.display        = '';
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const q = questions[currentQ];
+      const total = questions.length;
+
+      document.getElementById('qLabel').textContent = `คำถามที่ ${currentQ + 1}`;
+      document.getElementById('qNum').textContent   = `${currentQ + 1} / ${total}`;
+      document.getElementById('qText').textContent  = q.question;
+      document.getElementById('progressFill').style.width = `${(currentQ / total) * 100}%`;
+      document.getElementById('scoreDisp').textContent = score;
+      document.getElementById('nextWrap').style.display = 'none';
+
+      // Build choices
+      const grid = document.getElementById('choicesGrid');
+      grid.innerHTML = '';
+      q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = opt;
+        btn.onclick = () => selectAnswer(opt, q.answer);
+        grid.appendChild(btn);
+      });
+    }
+
+    function selectAnswer(selected, correct) {
+      const btns = document.querySelectorAll('.choice-btn');
+      btns.forEach(btn => {
+        btn.disabled = true;
+        if (btn.textContent === correct) btn.classList.add('correct');
+        else if (btn.textContent === selected && selected !== correct) btn.classList.add('wrong');
+      });
+      if (selected === correct) score++;
+      document.getElementById('scoreDisp').textContent = score;
+      document.getElementById('nextWrap').style.display = '';
+    }
+
+    function nextQuestion() {
+      currentQ++;
+      if (currentQ >= questions.length) showResult();
+      else renderQuestion();
+    }
+
+    function showResult() {
+      document.getElementById('quizUI').style.display  = 'none';
+      document.getElementById('resultUI').style.display = '';
+      const pct = score / questions.length;
+      document.getElementById('finalScore').textContent = `${score} / ${questions.length}`;
+      document.getElementById('resultEmoji').textContent = pct >= 0.8 ? '🏆' : pct >= 0.5 ? '😊' : '📚';
+    }
+
+    function restartGame() { startGame(currentChapter); }
+    function backToPicker() {
+      document.getElementById('resultUI').style.display      = 'none';
+      document.getElementById('quizUI').style.display        = 'none';
+      document.getElementById('chapterPicker').style.display = '';
+    }
+
+    function shuffleArr(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+  </script>
+</body>
+</html>

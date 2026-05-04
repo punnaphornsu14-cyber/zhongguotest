@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เข้าสู่ระบบ / สมัครสมาชิก • ภาษาจีน</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* ── Tab switcher ── */
+    .tab-switcher {
+      display: flex;
+      background: rgba(184,163,139,0.15);
+      border-radius: var(--radius-pill);
+      padding: 4px;
+      margin-bottom: 30px;
+      gap: 4px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: var(--radius-pill);
+      font-family: var(--font);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: var(--brown-light);
+      background: transparent;
+      letter-spacing: 0.3px;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #b8a38b, #7a5e46);
+      color: var(--cream-light);
+      box-shadow: 0 4px 12px rgba(60,40,25,0.22);
+    }
+
+    /* ── Panel animation ── */
+    .auth-panel {
+      display: none;
+      animation: fadeSlideIn 0.35s ease;
+    }
+    .auth-panel.active {
+      display: block;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Role selector (signup) ── */
+    .role-selector {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .role-option {
+      position: relative;
+    }
+    .role-option input[type="radio"] {
+      position: absolute; opacity: 0; width: 0; height: 0;
+    }
+    .role-label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 8px;
+      border-radius: 14px;
+      border: 2px solid #c8b59e;
+      background: rgba(255,252,247,0.9);
+      cursor: pointer;
+      transition: all 0.22s ease;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--brown-mid);
+      text-align: center;
+    }
+    .role-label .role-icon { font-size: 22px; }
+    .role-option input[type="radio"]:checked + .role-label {
+      border-color: var(--brown-mid);
+      background: rgba(122,94,70,0.08);
+      box-shadow: 0 0 0 3px rgba(122,94,70,0.18);
+      color: var(--brown-dark);
+    }
+    .role-label:hover { border-color: var(--brown-mid); }
+
+    /* ── Google Button ── */
+    .btn-google {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      padding: 13px 20px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-pill);
+      background: #fff;
+      color: var(--brown-dark);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      letter-spacing: 0.3px;
+    }
+    .btn-google:hover {
+      background: #f8f4f0;
+      border-color: var(--brown-mid);
+      box-shadow: 0 4px 14px rgba(60,40,25,0.12);
+      transform: translateY(-1px);
+    }
+    .btn-google:active { transform: translateY(0); }
+    .btn-google img {
+      width: 20px;
+      height: 20px;
+    }
+    .btn-google:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      display: flex; align-items: center; gap: 12px;
+      margin: 20px 0 16px;
+      color: var(--brown-light);
+      font-size: 12px; font-weight: 500;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--border);
+    }
+
+    /* ── Switch link ── */
+    .switch-link {
+      text-align: center;
+      font-size: 13px;
+      color: var(--brown-light);
+      margin-top: 20px;
+    }
+    .switch-link button {
+      background: none; border: none;
+      color: var(--brown-mid); font-family: var(--font);
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color 0.2s;
+    }
+    .switch-link button:hover { color: var(--brown-dark); }
+
+    /* ── Password strength bar ── */
+    .pw-strength-wrap {
+      margin-top: 8px;
+      display: none;
+    }
+    .pw-strength-wrap.visible { display: block; }
+    .pw-strength-bar {
+      height: 4px;
+      border-radius: var(--radius-pill);
+      background: #e0d5c8;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+    .pw-strength-fill {
+      height: 100%;
+      border-radius: var(--radius-pill);
+      width: 0%;
+      transition: width 0.3s, background 0.3s;
+    }
+    .pw-strength-text {
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    /* ── Success state ── */
+    .success-state {
+      text-align: center;
+      padding: 20px 0 10px;
+      display: none;
+    }
+    .success-state .check-icon {
+      width: 64px; height: 64px;
+      background: var(--green-bg);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 28px; color: var(--green-soft);
+      animation: popIn 0.4s cubic-bezier(0.68,-0.55,0.27,1.55);
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .success-state h3 { font-size: 20px; font-weight: 600; color: var(--brown-dark); margin-bottom: 8px; }
+    .success-state p { font-size: 14px; color: var(--brown-light); line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+  <!-- Background decoration -->
+  <div class="bg-circles">
+    <div class="circle c1"></div>
+    <div class="circle c2"></div>
+    <div class="circle c3"></div>
+  </div>
+
+  <div class="login-wrapper">
+
+    <!-- Logo / Title -->
+    <div class="brand">
+      <div class="brand-icon">📚</div>
+      <h2>ภาษาจีน</h2>
+      <p>รัตนราษฎร์บำรุง • ม.1</p>
+    </div>
+
+    <!-- Auth Card -->
+    <div class="glass-card">
+
+      <!-- Tab Switcher -->
+      <div class="tab-switcher">
+        <button class="tab-btn active" id="tabLogin" onclick="switchTab('login')">
+          <i class="fas fa-sign-in-alt" style="margin-right:6px;"></i>เข้าสู่ระบบ
+        </button>
+        <button class="tab-btn" id="tabSignup" onclick="switchTab('signup')">
+          <i class="fas fa-user-plus" style="margin-right:6px;"></i>สมัครสมาชิก
+        </button>
+      </div>
+
+      <!-- ════════════ LOGIN PANEL ════════════ -->
+      <div class="auth-panel active" id="panelLogin">
+
+        <!-- Error Banner -->
+        <div id="loginError" class="error-banner hidden">
+          <i class="fas fa-exclamation-circle"></i>
+          <span id="loginErrorText">เกิดข้อผิดพลาด</span>
+        </div>
+
+        <!-- Email -->
+        <div class="field-group">
+          <label>อีเมล</label>
+          <div class="input-wrap">
+            <i class="fas fa-envelope"></i>
+            <input id="loginEmail" type="email" placeholder="กรอกอีเมล" autocomplete="email">
+          </div>
+          <span class="field-error" id="loginEmailErr"></span>
+        </div>
+
+        <!-- Password -->
+        <div class="field-group">
+          <label>รหัสผ่าน</label>
+          <div class="input-wrap">
+            <i class="fas fa-lock"></i>
+            <input id="loginPassword" type="password" placeholder="กรอกรหัสผ่าน" autocomplete="current-password">
+            <button class="toggle-pw" type="button" onclick="togglePw('loginPassword', this)">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <span class="field-error" id="loginPwErr"></span>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn-primary" id="loginBtn" onclick="handleLogin()">
+          <span class="btn-text">เข้าสู่ระบบ</span>
+          <span class="btn-spinner hidden"><i class="fas fa-spinner fa-spin"></i> กำลังเข้าสู่ระบบ…</span>
+        </button>
+
+        <!-- ★ ปุ่มส่งอีเมลยืนยันอีกครั้ง (ซ่อนไว้ แสดงเมื่อยังไม่ verify) -->
+        <div id="resendVerifyWrap" style="display:none; text-align:center; margin-top:12px;">
+          <button class="btn-secondary" onclick="resendVerification()" style="font-size:13px; padding:10px 20px;">
+            <i class="fas fa-paper-plane"></i> ส่งอีเมลยืนยันอีกครั้ง
+          </button>
+        </div>
+
+        <div class="divider">หรือ</div>
+
+        <!-- ★ Google Sign-In -->
+        <button class="btn-google" id="googleLoginBtn" onclick="handleGoogleSignIn()">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+          เข้าสู่ระบบด้วย Google
+        </button>
+
+        <div class="switch-link">
+          ยังไม่มีบัญชี? <button onclick="switchTab('signup')">สมัครสมาชิก</button>
+        </div>
+
+      </div><!-- /panelLogin -->
+
+
+      <!-- ════════════ SIGNUP PANEL ════════════ -->
+      <div class="auth-panel" id="panelSignup">
+
+        <!-- Success State (shown after register) -->
+        <div class="success-state" id="signupSuccess">
+          <div class="check-icon"><i class="fas fa-envelope-open-text"></i></div>
+          <h3>สมัครสมาชิกสำเร็จ!</h3>
+          <p>ระบบได้ส่งอีเมลยืนยันไปที่ <strong id="verifyEmailDisplay"></strong> แล้ว<br>กรุณาเปิดอีเมลและคลิกลิงก์ยืนยันก่อนเข้าสู่ระบบ</p>
+          <br>
+          <button class="btn-primary" onclick="switchTab('login')" style="margin-top:8px;">
+            ไปยังหน้าเข้าสู่ระบบ
+          </button>
+        </div>
+
+        <!-- Signup Form -->
+        <div id="signupForm">
+
+          <!-- Error Banner -->
+          <div id="signupError" class="error-banner hidden">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="signupErrorText">เกิดข้อผิดพลาด</span>
+          </div>
+
+          <!-- Display Name -->
+          <div class="field-group">
+            <label>ชื่อ-นามสกุล</label>
+            <div class="input-wrap">
+              <i class="fas fa-user"></i>
+              <input id="signupName" type="text" placeholder="กรอกชื่อ-นามสกุล" autocomplete="name">
+            </div>
+            <span class="field-error" id="signupNameErr"></span>
+          </div>
+
+          <!-- Email -->
+          <div class="field-group">
+            <label>อีเมล</label>
+            <div class="input-wrap">
+              <i class="fas fa-envelope"></i>
+              <input id="signupEmail" type="email" placeholder="example@rr.ac.th" autocomplete="email">
+            </div>
+            <span class="field-error" id="signupEmailErr"></span>
+          </div>
+
+          <!-- Password -->
+          <div class="field-group">
+            <label>รหัสผ่าน</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input id="signupPassword" type="password" placeholder="อย่างน้อย 6 ตัวอักษร" autocomplete="new-password" oninput="checkStrength(this.value)">
+              <button class="toggle-pw" type="button" onclick="togglePw('signupPassword', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <div class="pw-strength-wrap" id="pwStrength">
+              <div class="pw-strength-bar">
+                <div class="pw-strength-fill" id="pwStrengthFill"></div>
+              </div>
+              <span class="pw-strength-text" id="pwStrengthText"></span>
+            </div>
+            <span class="field-error" id="signupPwErr"></span>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="field-group">
+            <label>ยืนยันรหัสผ่าน</label>
+            <div class="input-wrap">
+              <i class="fas fa-lock"></i>
+              <input id="signupConfirm" type="password" placeholder="กรอกรหัสผ่านอีกครั้ง" autocomplete="new-password">
+              <button class="toggle-pw" type="button" onclick="togglePw('signupConfirm', this)">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="field-error" id="signupConfirmErr"></span>
+          </div>
+
+          <!-- Role Selector -->
+          <div class="field-group">
+            <label>บทบาทของคุณ</label>
+            <div class="role-selector">
+              <div class="role-option">
+                <input type="radio" name="role" id="roleStudent" value="student" checked>
+                <label class="role-label" for="roleStudent">
+                  <span class="role-icon">🎓</span>
+                  นักเรียน
+                </label>
+              </div>
+              <div class="role-option">
+                <input type="radio" name="role" id="roleTeacher" value="teacher">
+                <label class="role-label" for="roleTeacher">
+                  <span class="role-icon">👩‍🏫</span>
+                  ครู
+                </label>
+              </div>
+
+            </div>
+            <span class="field-error" id="signupRoleErr"></span>
+          </div>
+
+          <!-- Student Extra Fields (shown only when student role selected) -->
+          <div id="studentExtraFields" style="display:none;">
+            <div class="form-row" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>ห้อง</label>
+                <div class="input-wrap">
+                  <i class="fas fa-door-open"></i>
+                  <input id="signupClassroom" type="text" placeholder="เช่น ม.1/1">
+                </div>
+                <span class="field-error" id="signupClassroomErr"></span>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>เลขที่</label>
+                <div class="input-wrap">
+                  <i class="fas fa-hashtag"></i>
+                  <input id="signupStudentNum" type="number" placeholder="เช่น 12" min="1" max="50">
+                </div>
+                <span class="field-error" id="signupStudentNumErr"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Submit -->
+          <button class="btn-primary" id="signupBtn" onclick="handleSignup()">
+            <span class="btn-text">สมัครสมาชิก</span>
+            <span class="btn-spinner hidden"><i class="fas fa-spinner fa-spin"></i> กำลังสร้างบัญชี…</span>
+          </button>
+
+          <div class="divider">หรือ</div>
+
+          <!-- ★ Google Sign-Up -->
+          <button class="btn-google" id="googleSignupBtn" onclick="handleGoogleSignIn()">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+            สมัครด้วย Google (@rr.ac.th)
+          </button>
+
+          <div class="switch-link">
+            มีบัญชีแล้ว? <button onclick="switchTab('login')">เข้าสู่ระบบ</button>
+          </div>
+
+        </div><!-- /signupForm -->
+      </div><!-- /panelSignup -->
+
+    </div><!-- /glass-card -->
+  </div><!-- /login-wrapper -->
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="auth.js"></script>
+
+  <script>
+    // ════════════════════════════════════════
+    // ROLE TOGGLE — Show student extra fields
+    // ════════════════════════════════════════
+    document.querySelectorAll('input[name="role"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        const isStudent = document.querySelector('input[name="role"]:checked')?.value === 'student';
+        document.getElementById('studentExtraFields').style.display = isStudent ? '' : 'none';
+      });
+    });
+    // Show on load if student is pre-checked
+    document.addEventListener('DOMContentLoaded', () => {
+      const checked = document.querySelector('input[name="role"]:checked');
+      if (checked?.value === 'student') {
+        document.getElementById('studentExtraFields').style.display = '';
+      }
+    });
+
+    // ════════════════════════════════════════
+    // TAB SWITCHER
+    // ════════════════════════════════════════
+    function switchTab(tab) {
+      const isLogin = tab === 'login';
+      // ซ่อนปุ่ม resend verify
+      const resendWrap = document.getElementById('resendVerifyWrap');
+      if (resendWrap) resendWrap.style.display = 'none';
+      document.getElementById('tabLogin').classList.toggle('active', isLogin);
+      document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+      document.getElementById('panelLogin').classList.toggle('active', isLogin);
+      document.getElementById('panelSignup').classList.toggle('active', !isLogin);
+      clearAllErrors();
+    }
+
+    // ════════════════════════════════════════
+    // TOGGLE PASSWORD VISIBILITY
+    // ════════════════════════════════════════
+    function togglePw(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      icon.className = isHidden ? 'fas fa-eye-slash' : 'fas fa-eye';
+    }
+
+    // ════════════════════════════════════════
+    // PASSWORD STRENGTH
+    // ════════════════════════════════════════
+    function checkStrength(val) {
+      const wrap = document.getElementById('pwStrength');
+      const fill = document.getElementById('pwStrengthFill');
+      const text = document.getElementById('pwStrengthText');
+
+      if (!val) { wrap.classList.remove('visible'); return; }
+      wrap.classList.add('visible');
+
+      let score = 0;
+      if (val.length >= 6) score++;
+      if (val.length >= 10) score++;
+      if (/[A-Z]/.test(val)) score++;
+      if (/[0-9]/.test(val)) score++;
+      if (/[^A-Za-z0-9]/.test(val)) score++;
+
+      const levels = [
+        { pct: '20%', color: '#e74c3c', label: 'อ่อนมาก' },
+        { pct: '40%', color: '#e67e22', label: 'อ่อน' },
+        { pct: '60%', color: '#f1c40f', label: 'ปานกลาง' },
+        { pct: '80%', color: '#2ecc71', label: 'แข็งแรง' },
+        { pct: '100%', color: '#27ae60', label: 'แข็งแรงมาก' },
+      ];
+      const lv = levels[Math.min(score - 1, 4)] || levels[0];
+      fill.style.width = lv.pct;
+      fill.style.background = lv.color;
+      text.textContent = `ความปลอดภัย: ${lv.label}`;
+      text.style.color = lv.color;
+    }
+
+    // ════════════════════════════════════════
+    // ERROR HELPERS
+    // ════════════════════════════════════════
+    function showBannerError(bannerId, textId, msg) {
+      document.getElementById(textId).textContent = msg;
+      document.getElementById(bannerId).classList.remove('hidden');
+    }
+
+    function showFieldError(id, msg) {
+      document.getElementById(id).textContent = msg;
+    }
+
+    function clearAllErrors() {
+      ['loginEmailErr','loginPwErr','signupNameErr','signupEmailErr',
+       'signupPwErr','signupConfirmErr','signupRoleErr',
+       'signupClassroomErr','signupStudentNumErr'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '';
+      });
+      ['loginError','signupError'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+    }
+
+    function setLoading(btnId, state, loadingText) {
+      const btn = document.getElementById(btnId);
+      const text = btn.querySelector('.btn-text');
+      const spinner = btn.querySelector('.btn-spinner');
+      btn.disabled = state;
+      text.classList.toggle('hidden', state);
+      spinner.classList.toggle('hidden', !state);
+      if (state && loadingText) spinner.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
+    }
+
+    function getErrorMessage(code) {
+      const map = {
+        'auth/invalid-email':        'รูปแบบอีเมลไม่ถูกต้อง',
+        'auth/user-not-found':       'ไม่พบบัญชีผู้ใช้นี้',
+        'auth/wrong-password':       'รหัสผ่านไม่ถูกต้อง',
+        'auth/invalid-credential':   'อีเมลหรือรหัสผ่านไม่ถูกต้อง',
+        'auth/too-many-requests':    'พยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่',
+        'auth/network-request-failed': 'ไม่สามารถเชื่อมต่ออินเทอร์เน็ตได้',
+        'auth/email-already-in-use': 'อีเมลนี้ถูกใช้งานแล้ว',
+        'auth/weak-password':        'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร',
+        'auth/operation-not-allowed':'ไม่อนุญาตให้สมัครด้วยวิธีนี้',
+        'user-data/not-found':       'ไม่พบข้อมูลผู้ใช้ในระบบ กรุณาติดต่อผู้ดูแล',
+        'auth/role-unknown':         'บทบาทของคุณยังไม่ได้รับการกำหนด กรุณาติดต่อผู้ดูแล',
+        'auth/domain-not-allowed':   'อนุญาตเฉพาะอีเมล @rr.ac.th เท่านั้น',
+        'auth/email-not-verified':   'อีเมลยังไม่ได้รับการยืนยัน กรุณาเปิดอีเมลและคลิกลิงก์ยืนยันก่อน',
+      };
+      return map[code] || `เกิดข้อผิดพลาด (${code})`;
+    }
+
+    // ════════════════════════════════════════
+    // LOGIN
+    // ════════════════════════════════════════
+    // ★ ตรวจสอบว่าอีเมลเป็น domain @rr.ac.th หรือไม่
+    const ALLOWED_DOMAIN = '@rr.ac.th';
+    function isAllowedDomain(email) {
+      return email.toLowerCase().endsWith(ALLOWED_DOMAIN);
+    }
+
+    // ════════════════════════════════════════
+    // GOOGLE SIGN-IN
+    // ════════════════════════════════════════
+    async function handleGoogleSignIn() {
+      clearAllErrors();
+      const provider = new firebase.auth.GoogleAuthProvider();
+      // ★ จำกัด domain — แสดงเฉพาะ @rr.ac.th ใน account chooser
+      provider.setCustomParameters({ hd: 'rr.ac.th' });
+
+      try {
+        const result = await firebase.auth().signInWithPopup(provider);
+        const user = result.user;
+        const email = user.email;
+
+        // ★ ตรวจสอบ domain อีกครั้ง (ป้องกันกรณี user เลือกบัญชีอื่น)
+        if (!isAllowedDomain(email)) {
+          await user.delete(); // ลบ user ที่สร้างไว้ถ้าเป็น domain อื่น
+          showBannerError('loginError', 'loginErrorText', `อนุญาตเฉพาะอีเมล ${ALLOWED_DOMAIN} เท่านั้น`);
+          return;
+        }
+
+        // ★ ตรวจสอบว่ามี user data ใน Database หรือยัง
+        const snap = await firebase.database().ref(`/users/${user.uid}`).get();
+
+        if (!snap.exists()) {
+          // ผู้ใช้ใหม่ — สร้างข้อมูลใน Database (default role = student)
+          const userData = {
+            displayName: user.displayName || email.split('@')[0],
+            email: email,
+            role: 'student',
+            online: false,
+            emailVerified: true,
+            createdAt: Date.now(),
+            loginMethod: 'google',
+          };
+          await firebase.database().ref(`/users/${user.uid}`).set(userData);
+        } else {
+          // ผู้ใช้เก่า — อัปเดต emailVerified
+          const existing = snap.val();
+          if (!existing.emailVerified) {
+            await firebase.database().ref(`/users/${user.uid}/emailVerified`).set(true);
+          }
+        }
+
+        // ★ ดึง role แล้ว redirect
+        const updatedSnap = await firebase.database().ref(`/users/${user.uid}`).get();
+        const { role } = updatedSnap.val();
+        const routes = {
+          teacher: 'teacher-dashboard.html',
+          student: 'student-portal.html',
+          dev: 'admin-panel.html',
+        };
+
+        if (routes[role]) {
+          window.location.href = routes[role];
+        } else {
+          throw { code: 'auth/role-unknown' };
+        }
+
+      } catch (err) {
+        // ผู้ใช้ปิด popup — ไม่ต้องแสดง error
+        if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') return;
+        console.error('Google sign-in error:', err);
+        const bannerId = document.getElementById('panelLogin').classList.contains('active') ? 'loginError' : 'signupError';
+        const textId = bannerId === 'loginError' ? 'loginErrorText' : 'signupErrorText';
+        showBannerError(bannerId, textId, getErrorMessage(err.code));
+      }
+    }
+
+    async function handleLogin() {
+      clearAllErrors();
+      // ซ่อนปุ่ม resend ถ้ามี
+      const resendWrap = document.getElementById('resendVerifyWrap');
+      if (resendWrap) resendWrap.style.display = 'none';
+
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+
+      let valid = true;
+      if (!email) { showFieldError('loginEmailErr', 'กรุณากรอกอีเมล'); valid = false; }
+      else if (!/\S+@\S+\.\S+/.test(email)) { showFieldError('loginEmailErr', 'รูปแบบอีเมลไม่ถูกต้อง'); valid = false; }
+      else if (!isAllowedDomain(email)) { showFieldError('loginEmailErr', 'อนุญาตเฉพาะอีเมล @rr.ac.th เท่านั้น'); valid = false; }
+      if (!password) { showFieldError('loginPwErr', 'กรุณากรอกรหัสผ่าน'); valid = false; }
+      if (!valid) return;
+
+      setLoading('loginBtn', true, 'กำลังเข้าสู่ระบบ…');
+
+      try {
+        const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const user = cred.user;
+
+        // ★ ตรวจสอบ email verification
+        if (!user.emailVerified) {
+          // เก็บ user ไว้ resend ได้
+          window.__unverifiedUser = user;
+          await firebase.auth().signOut();
+          setLoading('loginBtn', false);
+          showBannerError('loginError', 'loginErrorText', getErrorMessage('auth/email-not-verified'));
+          // แสดงปุ่ม resend
+          if (resendWrap) resendWrap.style.display = 'block';
+          return;
+        }
+
+        const uid  = user.uid;
+        const snap = await firebase.database().ref(`/users/${uid}`).get();
+        if (!snap.exists()) throw { code: 'user-data/not-found' };
+
+        const { role } = snap.val();
+        const routes = {
+          teacher: 'teacher-dashboard.html',
+          student: 'student-portal.html',
+          dev:     'admin-panel.html',
+        };
+
+        if (routes[role]) {
+          window.location.href = routes[role];
+        } else {
+          throw { code: 'auth/role-unknown' };
+        }
+
+      } catch (err) {
+        setLoading('loginBtn', false);
+        showBannerError('loginError', 'loginErrorText', getErrorMessage(err.code));
+      }
+    }
+
+    // ★ ส่งอีเมลยืนยันอีกครั้ง
+    async function resendVerification() {
+      const email    = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      if (!email || !password) {
+        showBannerError('loginError', 'loginErrorText', 'กรุณากรอกอีเมลและรหัสผ่านก่อนกดส่งอีเมลยืนยันอีกครั้ง');
+        return;
+      }
+      try {
+        const cred = await firebase.auth().signInWithEmailAndPassword(email, password);
+        await cred.user.sendEmailVerification();
+        await firebase.auth().signOut();
+        showBannerError('loginError', 'loginErrorText', '📩 ส่งอีเมลยืนยันใหม่แล้ว! กรุณาเปิดอีเมลและคลิกลิงก์ยืนยัน');
+        document.getElementById('loginError').classList.remove('hidden');
+        // เปลี่ยนสี banner เป็นเขียว (success) ชั่วคราว
+        document.getElementById('loginError').style.background = 'var(--green-bg)';
+        document.getElementById('loginError').style.borderColor = 'var(--green-soft)';
+        document.getElementById('loginError').style.color = '#2d6a4f';
+        setTimeout(() => {
+          document.getElementById('loginError').style = '';
+        }, 5000);
+      } catch (err) {
+        showBannerError('loginError', 'loginErrorText', getErrorMessage(err.code));
+      }
+    }
+
+    // ════════════════════════════════════════
+    // SIGNUP
+    // ════════════════════════════════════════
+    async function handleSignup() {
+      clearAllErrors();
+
+      const name     = document.getElementById('signupName').value.trim();
+      const email    = document.getElementById('signupEmail').value.trim();
+      const password = document.getElementById('signupPassword').value;
+      const confirm  = document.getElementById('signupConfirm').value;
+      const role     = document.querySelector('input[name="role"]:checked')?.value;
+      const classroom   = document.getElementById('signupClassroom')?.value.trim();
+      const studentNum  = document.getElementById('signupStudentNum')?.value.trim();
+
+      let valid = true;
+      if (!name)    { showFieldError('signupNameErr',    'กรุณากรอกชื่อ-นามสกุล'); valid = false; }
+      if (!email)   { showFieldError('signupEmailErr',   'กรุณากรอกอีเมล'); valid = false; }
+      else if (!/\S+@\S+\.\S+/.test(email)) { showFieldError('signupEmailErr', 'รูปแบบอีเมลไม่ถูกต้อง'); valid = false; }
+      else if (!isAllowedDomain(email)) { showFieldError('signupEmailErr', 'อนุญาตเฉพาะอีเมล @rr.ac.th เท่านั้น'); valid = false; }
+      if (!password)          { showFieldError('signupPwErr', 'กรุณากรอกรหัสผ่าน'); valid = false; }
+      else if (password.length < 6) { showFieldError('signupPwErr', 'รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร'); valid = false; }
+      if (password !== confirm) { showFieldError('signupConfirmErr', 'รหัสผ่านไม่ตรงกัน'); valid = false; }
+      if (!role)    { showFieldError('signupRoleErr', 'กรุณาเลือกบทบาท'); valid = false; }
+      if (role === 'student') {
+        if (!classroom) { showFieldError('signupClassroomErr', 'กรุณากรอกห้อง'); valid = false; }
+        if (!studentNum) { showFieldError('signupStudentNumErr', 'กรุณากรอกเลขที่'); valid = false; }
+      }
+      if (!valid) return;
+
+      setLoading('signupBtn', true, 'กำลังสร้างบัญชี…');
+
+      try {
+        // 1. Create Firebase Auth user
+        const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const uid  = cred.user.uid;
+
+        // 2. Update display name
+        await cred.user.updateProfile({ displayName: name });
+
+        // 3. ★ ส่งอีเมลยืนยัน
+        await cred.user.sendEmailVerification();
+
+        // 4. Write user data to Realtime Database
+        const userData = {
+          displayName: name,
+          email:       email,
+          role:        role,
+          online:      false,
+          emailVerified: false,
+          createdAt:   Date.now(),
+        };
+        if (role === 'student') {
+          userData.classroom  = classroom;
+          userData.studentNum = parseInt(studentNum);
+        }
+        await firebase.database().ref(`/users/${uid}`).set(userData);
+
+        // 5. Sign out immediately — require email verification before login
+        await firebase.auth().signOut();
+
+        // 6. Show success state with verification email notice
+        setLoading('signupBtn', false);
+        document.getElementById('verifyEmailDisplay').textContent = email;
+        document.getElementById('signupForm').style.display = 'none';
+        document.getElementById('signupSuccess').style.display = 'block';
+
+      } catch (err) {
+        setLoading('signupBtn', false);
+        showBannerError('signupError', 'signupErrorText', getErrorMessage(err.code));
+      }
+    }
+
+    // ════════════════════════════════════════
+    // KEYBOARD SHORTCUTS
+    // ════════════════════════════════════════
+    document.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const loginActive = document.getElementById('panelLogin').classList.contains('active');
+      if (loginActive) handleLogin();
+      else handleSignup();
+    });
+
+    // ════════════════════════════════════════
+    // SHOW GUARD MESSAGE (from redirect)
+    // ════════════════════════════════════════
+    document.addEventListener('DOMContentLoaded', () => {
+      const checked = document.querySelector('input[name="role"]:checked');
+      if (checked?.value === 'student') {
+        document.getElementById('studentExtraFields').style.display = '';
+      }
+      const msg = sessionStorage.getItem('guardMessage');
+      if (msg) {
+        sessionStorage.removeItem('guardMessage');
+        showBannerError('loginError', 'loginErrorText', msg);
+      }
+    });
+  </script>
+</body>
+</html>
